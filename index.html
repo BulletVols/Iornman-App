@@ -265,6 +265,12 @@ dialog::backdrop{background:rgba(8,20,30,.45)}
       <p><b>Dr. Dan Plews (HRV, Kona age-group record):</b> daily readiness decides whether a hard session happens. Rule: if your morning HRV is well below your 7-day normal or resting HR is 5+ bpm high, and you feel off, swap that day's key session for Z1 or rest. Long sessions double as fueling practice. His personal low-carb approach is left out on purpose: with this volume, a weight goal and a still-developing body, under-fueling is the bigger risk.</p>
       <p><b>Lance Watson (Whitfield, Peter Reid):</b> long-term development first, building threshold and skill before chasing long-course speed. That's why cycle one is about swim technique, run durability and aerobic base, with speed saved for the 2027–28 cycle.</p>
 
+      <h3 class="cond" style="margin:18px 0 6px;font-size:1.2rem">Swim season (weeks 3–18, through January)</h3>
+      <p>Three coached practices a week (Monday, Tuesday, Friday) replace the two swims this plan had written. A coach watching your stroke beats any set I can write, so the swim is theirs until February. Lifting is handled in your school class, so no lift sessions appear until then either.</p>
+      <p>That leaves intensity as the thing to manage. Swim practice is mixed, so some of those hours are hard whether you plan it or not. Everything on land is therefore built around <b>one hard day, Wednesday</b>: the key bike session plus a quality brick run, in your two-hour window. Thursday is deliberately easy, and the long ride and long run stay on the weekend. That's the Norwegian pattern of concentrating intensity instead of spreading it, and with your shins it's also the safer way to run.</p>
+      <p><b>When the season ends (week 19, February 1):</b> Tuesday and Saturday swims come back, Thursday returns as a second quality day, and Monday becomes a maintenance lift. Your swim fitness should be far ahead of where this plan assumed.</p>
+      <p><b>Meets:</b> a Saturday meet beats the long ride. Move the ride to Sunday and the long run to Monday, and drop the Tuesday spin that week.</p>
+
       <h3 class="cond" style="margin:18px 0 6px;font-size:1.2rem">Shins and Achilles rules</h3>
       <p>Tightness that eases once you warm up is fine. Morning-after pain above 3/10 means you skip or shorten the next run and ride instead. Sharp pain in one spot on the bone, pain that makes you limp, or pain that gets worse as you run: stop running and see a doctor (stress fractures start this way). Run volume in this plan only rises about 5 minutes a week on the long run, and weeks 1–8 use run-walk on purpose.</p>
 
@@ -627,6 +633,7 @@ function calf(when,d){ return S('mob',when,'Calf, Achilles & shin routine',d||25
   '5 min hip and ankle mobility'],
   'This is your shin and Achilles insurance. Mild stretch or ache is fine; sharp pain is not. When 3×15 feels easy, wear a loaded backpack.'); }
 function liftMon(w){
+  if(inSeason(w)) return null;
   if(w>=35) return S('lift','PM','Activation only',20,'Light',['20 min: bands, bodyweight, mobility'],'No heavy lifting in the final week.');
   if(w<=13){
     if(REC.has(w)) return S('lift','PM','Lift: strength & speed (light week)',45,'About 70% of normal load, fewer sets',['Your program at reduced volume'],'Recovery week: only lift once, and leave several reps in the tank.');
@@ -643,8 +650,48 @@ function liftThu(w){
 function restDay(){ return S('rest','PM','Rest',0,'Off',['Full rest'],'Sleep, eat well, do homework guilt-free.'); }
 
 /* ---------- Build a week ---------- */
+const SEASON_A=3, SEASON_B=18;
+function inSeason(w){ return w>=SEASON_A && w<=SEASON_B; }
+function teamSwim(when,note){
+  return S('swim',when,'Swim team practice',60,'Coach\'s set',
+    ['Whatever the coach puts on the board','Log it hard or easy depending on the set'],
+    note||'Coached time is the fastest fix for a five-year layoff, so the coach owns your swim until February. Just log the hour so the week adds up.',{key:true});
+}
+function seasonBrick(w){
+  const p=phase(w).id, d=p===1?20:25;
+  return S('run','PM','Quality brick run',d,'Top of Z2 to Z3',
+    ['Change shoes fast (under 3 min)','First 5 min deliberately easy','Then '+(d-5)+' min at the top of Z2, steady and controlled'],
+    'The running half of your hard day. Quick feet, short stride. Back off to easy if shins or Achilles get sharp.',{key:true});
+}
+function seasonThuRun(w){
+  const p=phase(w).id, d=p===1?35:p===2?45:50;
+  return S('run','PM','Easy aerobic run',d,'Z2 (conversational)',
+    [d+' min easy Z2','Finish with 4×20s relaxed strides on flat ground'],
+    'Deliberately easy. Wednesday is the hard day now, and three swim practices add up, so this one stays conversational.');
+}
 function buildWeek(w){
   const days=[[],[],[],[],[],[],[]], rec=REC.has(w), p=phase(w).id;
+  if(inSeason(w)){
+    // Mon: team swim
+    days[0].push(calf('AM'));
+    days[0].push(teamSwim('PM','Team practice. Your lifting happens at school, so nothing extra is planned today.'));
+    // Tue: team swim
+    const tr2=tueRunAM(w); days[1].push(tr2||calf('AM',20));
+    days[1].push(teamSwim('PM'));
+    days[1].push(S('bike','PM','Easy spin after practice (optional)',40,'Z1–Z2',
+      ['40 min easy Z2, cadence 85–95'],'Only if practice was on the easy side and you still have the hour. Skip it after a sprint set.',{opt:true}));
+    // Wed: the hard day
+    if(p===1||rec) days[2].push(S('mob','AM','Mobility + core',20,'Easy',['10 min hip/ankle mobility','10 min core: planks, side planks, dead bugs'],'Quick and easy.'));
+    else days[2].push(S('bike','AM','Easy spin (optional)',30,'Z1',['30 min easy, cadence 90+'],'Only if you slept well. Skipping this never hurts the plan.',{opt:true}));
+    days[2].push(wedBike(w));
+    if(!rec) days[2].push(seasonBrick(w));
+    // Thu: easy, or the run test on recovery weeks
+    days[3].push(S('bike','AM','Easy spin (optional)',30,'Z1',['30 min easy'],'Optional aerobic top-up.',{opt:true}));
+    days[3].push(rec? thuRun(w) : seasonThuRun(w));
+    // Fri: team swim
+    days[4].push(calf('AM',20));
+    days[4].push(teamSwim('PM'));
+  } else {
   // Mon
   days[0].push(calf('AM'));
   days[0].push(liftMon(w));
@@ -664,6 +711,7 @@ function buildWeek(w){
   if(p===1) days[4].push(S('swim','PM','Technique swim (optional)',30,'Easy',['200 easy','8×50 drill of choice, 20s rest','4×50 easy swim focusing on one cue','100 easy'],'Optional third swim while you relearn the stroke. Rest instead if the week felt heavy.',{opt:true}));
   else days[4].push(S('bike','PM','Recovery spin (optional)',40,'Z1',['40 min very easy, cadence 90'],'Recovery day before the weekend. Rest completely if tired.',{opt:true}));
   if(fr) days[4].push(calf('PM',20));
+  }
   // Sat
   if(w===33){
     days[5].push(S('swim','Sat','Race rehearsal: swim',65,'Ironman effort',['200 easy','3,000 m continuous at Ironman effort'],'Big rehearsal day. Treat it like race morning: breakfast 3 hours before, same foods you would race on.',{key:true,sub:'Rehearsal'}));
@@ -674,7 +722,8 @@ function buildWeek(w){
     days[5].push(S('bike','Sat','Benchmark day: bike',120,'Ironman power',['20 min Z2','80 min at Ironman power','20 min Z2'],FUEL_NOTE,{key:true,sub:'Benchmark'}));
     days[5].push(S('run','Sat','Benchmark day: run',45,'Ironman run pace',['45 min at Ironman run pace off the bike. Record average pace and HR'],'Compare pace at the same HR with your early tests. That\'s your progress.',{key:true,sub:'Benchmark'}));
   } else {
-    days[5].push(satSwim(w)); days[5].push(satRide(w)); const sb=satBrick(w); if(sb) days[5].push(sb);
+    if(!inSeason(w)) days[5].push(satSwim(w));
+    days[5].push(satRide(w)); const sb=satBrick(w); if(sb) days[5].push(sb);
   }
   // Sun
   days[6].push(longRun(w));
@@ -806,7 +855,8 @@ function renderWeek(){
   $('weekStats').innerHTML=`<span><b>${hm(weekMin(cw))}</b>planned</span>`+
     ['swim','bike','run','lift'].filter(k=>bs[k]).map(k=>`<span><b>${hm(bs[k])}</b>${SPORTN[k].toLowerCase()}</span>`).join('')+
     `<span>optional sessions not counted</span>`;
-  $('weekFocus').textContent = REC.has(cw)? REC_FOCUS : (cw===33?'Rehearsal week: Saturday is a full race-day practice (swim, bike, run, fueling, breakfast timing). The rest of the week is lighter to arrive fresh.': cw===35?'Final week: short, sharp sessions, an FTP retest, and Saturday\'s benchmark day to measure the whole cycle.': FOCUS[phase(cw).id]);
+  const seasonNote = inSeason(cw)? ' Swim season: three coached practices (Mon, Tue, Fri) cover your swimming, Wednesday is your one hard land day, and lifting is handled at school. Meet on Saturday? Swap the long ride to Sunday and the long run to Monday.' : '';
+  $('weekFocus').textContent = (REC.has(cw)? REC_FOCUS : (cw===33?'Rehearsal week: Saturday is a full race-day practice (swim, bike, run, fueling, breakfast timing). The rest of the week is lighter to arrive fresh.': cw===35?'Final week: short, sharp sessions, an FTP retest, and Saturday\'s benchmark day to measure the whole cycle.': FOCUS[phase(cw).id])) + seasonNote;
   $('prevW').disabled=cw===1; $('nextW').disabled=cw===NW;
   $('days').innerHTML=PLAN[cw-1].map((ss,d)=>{
     const m=ss.filter(s=>!s.opt).reduce((a,s)=>a+s.dur,0);
