@@ -1,5 +1,5 @@
 // Bump VERSION whenever you change index.html so phones pick up the update.
-const VERSION = 'ironman-v2';
+const VERSION = 'ironman-v8';
 const SHELL = ['./', 'index.html', 'manifest.webmanifest', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png'];
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(VERSION).then(c => Promise.allSettled(SHELL.map(u => c.add(u)))).then(() => self.skipWaiting()));
